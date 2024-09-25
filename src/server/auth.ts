@@ -9,6 +9,7 @@ import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import { env } from "@/env";
 import { db } from "@/server/db";
+import { type Role } from "@prisma/client";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -21,7 +22,7 @@ declare module "next-auth" {
     user: {
       id: string;
       // ...other properties
-      // role: UserRole;
+      roles: Role[];
     } & DefaultSession["user"];
   }
 
@@ -38,13 +39,20 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const record = await db.user.findUnique({
+          where: { id: user.id },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        if (record) session.user.roles = record.roles;
+      }
+
+      console.log(session);
+      return session;
+    },
   },
   adapter: PrismaAdapter(db) as Adapter,
   providers: [

@@ -13,6 +13,7 @@ import { ZodError } from "zod";
 
 import { getServerAuthSession } from "@/server/auth";
 import { db } from "@/server/db";
+import { Role } from "@prisma/client";
 
 /**
  * 1. CONTEXT
@@ -101,6 +102,36 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result;
 });
 
+
+/**
+ * Middleware for assuring user is authed correctly.
+ *
+ */
+const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({
+    ctx: {
+      // infers the `session` as non-nullable
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+/**
+ * Middleware for role verification.
+ *
+ */
+export const VerifyRoles = (admitedRoles?: Role[]) =>
+  t.middleware(({ ctx, next }) => {
+    // Verification logic
+
+    return next({
+      ctx,
+    });
+  });
+
 /**
  * Public (unauthenticated) procedure
  *
@@ -120,6 +151,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
+  .use(enforceUserIsAuthed)
   .use(({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -131,3 +163,5 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+
