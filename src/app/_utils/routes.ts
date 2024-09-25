@@ -1,38 +1,38 @@
 export enum ROUTES {
-    // Authentication
-    LOGIN = "/login",
-    LOGOUT = "/logout",
+  // Authentication
+  LOGIN = "/login",
+  LOGOUT = "/logout",
 
-    // Dashboard
-    DASHBOARD = "/dashboard",
+  // Dashboard
+  DASHBOARD = "/dashboard",
 
-    // Volunteer Management
-    VOLUNTEERS = "/volunteers",
-    ADD_VOLUNTEER = "/volunteers/add",
-    EDIT_VOLUNTEER = "/volunteers/edit/:id",
-    VOLUNTEER_DETAILS = "/volunteers/:id",
+  // Volunteer Management under Dashboard
+  VOLUNTEERS = "/dashboard/volunteers",
+  ADD_VOLUNTEER = "/dashboard/volunteers/add",
+  EDIT_VOLUNTEER = "/dashboard/volunteers/edit/:id",
+  VOLUNTEER_DETAILS = "/dashboard/volunteers/:id",
 
-    // Attendance Management
-    ATTENDANCE = "/attendance",
-    ADD_ATTENDANCE = "/attendance/add",
-    EDIT_ATTENDANCE = "/attendance/edit/:id",
+  // Attendance Management under Dashboard
+  ATTENDANCE = "/dashboard/attendance",
+  ADD_ATTENDANCE = "/dashboard/attendance/add",
+  EDIT_ATTENDANCE = "/dashboard/attendance/edit/:id",
 
-    // Activity Management
-    ACTIVITIES = "/activities",
-    ADD_ACTIVITY = "/activities/add",
-    EDIT_ACTIVITY = "/activities/edit/:id",
-    ACTIVITY_DETAILS = "/activities/:id",
+  // Activity Management under Dashboard
+  ACTIVITIES = "/dashboard/activities",
+  ADD_ACTIVITY = "/dashboard/activities/add",
+  EDIT_ACTIVITY = "/dashboard/activities/edit/:id",
+  ACTIVITY_DETAILS = "/dashboard/activities/:id",
 
-    // Reports
-    REPORTS = "/reports",
+  // Reports under Dashboard
+  REPORTS = "/dashboard/reports",
 
-    // Settings
-    SETTINGS = "/settings",
-    SETTINGS_USERS = "/settings/users",
-    SETTINGS_ROLES = "/settings/roles",
-    SETTINGS_PROFILE = "/settings/profile",
+  // Settings under Dashboard
+  SETTINGS = "/dashboard/settings",
+  SETTINGS_USERS = "/dashboard/settings/users",
+  SETTINGS_ROLES = "/dashboard/settings/roles",
+  SETTINGS_PROFILE = "/dashboard/settings/profile",
 
-    // Error Pages
-    NOT_FOUND = "/404",
-    UNAUTHORIZED = "/403"
+  // Error Pages
+  NOT_FOUND = "/404",
+  UNAUTHORIZED = "/403",
 }
