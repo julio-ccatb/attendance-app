@@ -11,6 +11,7 @@ import { Separator } from "../ui/separator";
 import { Drawer, DrawerContent, DrawerTrigger } from "../ui/drawer";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { SidebarButton } from "./sidebar-button";
+import { useSession } from "next-auth/react";
 
 interface SidebarMobileProps {
   sidebarItems: SidebarItems;
@@ -18,6 +19,7 @@ interface SidebarMobileProps {
 
 export function SidebarMobile(props: SidebarMobileProps) {
   const pathname = usePathname();
+  const session = useSession()
 
   return (
     <Sheet>
@@ -29,7 +31,7 @@ export function SidebarMobile(props: SidebarMobileProps) {
       <SheetContent side="left" className="px-3 py-4">
         <SheetHeader className="flex flex-row items-center justify-between space-y-0">
           <span className="mx-3 text-lg font-semibold text-foreground">
-            Twitter
+            VolunTrack
           </span>
         </SheetHeader>
         <div className="h-full">
@@ -57,10 +59,10 @@ export function SidebarMobile(props: SidebarMobileProps) {
                   <div className="flex w-full items-center justify-between">
                     <div className="flex gap-2">
                       <Avatar className="h-5 w-5">
-                        <AvatarImage src="https://github.com/max-programming.png" />
-                        <AvatarFallback>Max Programming</AvatarFallback>
+                        <AvatarImage src={session.data?.user.image ?? "https://github.com/max-programming.png"} />
+                        <AvatarFallback>{session.data?.user.name}</AvatarFallback>
                       </Avatar>
-                      <span>Max Programming</span>
+                      <span>{session.data?.user.name}</span>
                     </div>
                     <MoreHorizontal size={20} />
                   </div>

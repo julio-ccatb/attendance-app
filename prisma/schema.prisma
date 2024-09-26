@@ -89,6 +89,7 @@ model Attendance {
     activityId  Int // Links the attendance to a specific activity
     volunteerId Int // Links the attendance to a volunteer
     userId      String // User who registered the attendance
+    hoursValue  Int // Number of hours value for the attendance
     // Relations
     volunteer   Volunteer        @relation(fields: [volunteerId], references: [id])
     activity    Activity         @relation(fields: [activityId], references: [id])
@@ -96,14 +97,16 @@ model Attendance {
 }
 
 model Activity {
-    id          Int          @id @default(autoincrement())
-    name        String
-    description String?
-    date        DateTime // Date of the activity
-    createdAt   DateTime     @default(now())
-    updatedAt   DateTime     @updatedAt
+    id            Int          @id @default(autoincrement())
+    name          String
+    description   String?
+    dateStart     DateTime // Date of the activity
+    dateEnd       DateTime?
+    durationHours Int?
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
     // Relations
-    attendances Attendance[] // Attendances linked to this activity
+    attendances   Attendance[] // Attendances linked to this activity
 }
 
 enum Role {
