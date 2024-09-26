@@ -1,5 +1,7 @@
 "use client";
 
+import TableError from "@/components/table-error";
+import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,75 +26,46 @@ import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-
 type ActivityListProps = {
   activities: Activity[];
   onEditActivity: (id: string) => void;
   onViewDetails: (id: string) => void;
 };
 
-const initialActivities: Activity[] = [
-  {
-    id: 1,
-    name: "Beach Cleanup",
-    description: "Clean up the local beach",
-    dateStart: new Date(2023, 8, 15),
-    dateEnd: new Date(2023, 8, 15),
-    createdAt: new Date(),
-    durationHours: 40,
-    updatedAt: new Date(),
-    maxVolunteers: 20,
-  },
-  {
-    id: 2,
-    name: "Food Drive",
-    description: "Collect food for the local food bank",
-    dateStart: new Date(2023, 8, 22),
-    dateEnd: new Date(2023, 8, 22),
-    createdAt: new Date(),
-    durationHours: 40,
-    updatedAt: new Date(),
-    maxVolunteers: 20,
-  },
-  {
-    id: 3,
-    name: "Tree Planting",
-    description: "Plant trees in the community park",
-    dateStart: new Date(2023, 9, 1),
-    dateEnd: new Date(2023, 9, 1),
-    createdAt: new Date(),
-    durationHours: 40,
-    updatedAt: new Date(),
-    maxVolunteers: 20,
-  },
-  // Add more mock data as needed
-];
-
 export default function ActivityList({
   activities,
   onEditActivity,
   onViewDetails,
 }: ActivityListProps) {
-
-  const { data: initialActivities } = api.activity.getLatest.useQuery()
+  const {
+    data: initialActivities,
+    status,
+    refetch,
+  } = api.activity.getLatest.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  if (status === "pending") return <TableSkeleton />;
+  if (status === "error")
+    return (
+      <TableError
+        message="We could not load the data requested, please try again"
+        onRetry={() => refetch()}
+      />
+    );
 
-  if (!initialActivities) return
-
-  const filteredActivities = initialActivities ? initialActivities.filter(
-    (activity) =>
-      (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.name
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())) &&
-      (!dateFilter ||
-        (activity.dateStart &&
-          activity.dateStart.toDateString() === dateFilter.toDateString())),
-  ) : []
+  const filteredActivities = initialActivities
+    ? initialActivities.filter(
+        (activity) =>
+          (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            activity.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+          (!dateFilter ||
+            (activity.dateStart &&
+              activity.dateStart.toDateString() === dateFilter.toDateString())),
+      )
+    : [];
 
   const pageCount = Math.ceil(filteredActivities.length / itemsPerPage);
   const paginatedActivities = filteredActivities.slice(
@@ -134,7 +107,9 @@ export default function ActivityList({
               <TableCell className="font-medium">{activity.name}</TableCell>
               <TableCell>{activity.description}</TableCell>
               <TableCell>
-                {activity.dateStart ? activity.dateStart.toLocaleDateString() : "Not set"}
+                {activity.dateStart
+                  ? activity.dateStart.toLocaleDateString()
+                  : "Not set"}
               </TableCell>
               <TableCell>{activity.maxVolunteers}</TableCell>
               <TableCell>
