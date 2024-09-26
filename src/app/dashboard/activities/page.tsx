@@ -1,29 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import ActivityList from "./activity-list";
-import ActivityForm from "./activity-form";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { type Activity } from "pg/generated/zod";
+import { useState } from "react";
+import ActivityForm from "./activity-form";
+import ActivityList from "./activity-list";
 
 type View = "list" | "details";
 
-type Activity = {
-  id: string;
-  name: string;
-  description: string;
-  date: Date | null;
-  volunteer: number;
-  maxVolunteers: number;
-};
 
 export default function ActivityManagement() {
   const [view, setView] = useState<View>("list");
@@ -40,7 +30,7 @@ export default function ActivityManagement() {
   };
 
   const handleEditActivity = (id: string) => {
-    const activityToEdit = activities.find((activity) => activity.id === id);
+    const activityToEdit = activities.find((activity) => activity.id.toString() === id);
     if (activityToEdit) {
       setEditingActivity(activityToEdit);
       setIsModalOpen(true);
@@ -67,7 +57,6 @@ export default function ActivityManagement() {
         ),
       );
     } else {
-      setActivities([...activities, { ...data, id: Date.now().toString() }]);
     }
     setIsModalOpen(false);
   };
@@ -93,7 +82,7 @@ export default function ActivityManagement() {
       {view === "list" && (
         <ActivityList
           activities={activities}
-          onAddActivity={handleAddActivity}
+          // onAddActivity={handleAddActivity}
           onEditActivity={handleEditActivity}
           onViewDetails={handleViewDetails}
         />
