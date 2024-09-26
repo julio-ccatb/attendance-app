@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { api } from "@/trpc/react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
 import { useState } from "react";
@@ -72,12 +73,17 @@ export default function ActivityList({
   onEditActivity,
   onViewDetails,
 }: ActivityListProps) {
+
+  const { data: initialActivities } = api.activity.getLatest.useQuery()
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredActivities = initialActivities.filter(
+
+  if (!initialActivities) return
+
+  const filteredActivities = initialActivities ? initialActivities.filter(
     (activity) =>
       (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         activity.name
@@ -86,7 +92,7 @@ export default function ActivityList({
       (!dateFilter ||
         (activity.dateStart &&
           activity.dateStart.toDateString() === dateFilter.toDateString())),
-  );
+  ) : []
 
   const pageCount = Math.ceil(filteredActivities.length / itemsPerPage);
   const paginatedActivities = filteredActivities.slice(

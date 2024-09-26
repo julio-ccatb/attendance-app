@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { add, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -45,10 +46,11 @@ export default function ActivityForm({
   const [startDuration, setStartDuration] = useState<TimeValue>();
   const [endDuration, setEndDuration] = useState<TimeValue>();
 
+  const { mutate: createActivity, data, error } = api.activity.create.useMutation()
 
   const form = useForm<TInput>({
     resolver,
-    defaultValues: initialData
+    defaultValues: { ...initialData, maxVolunteers: 20 }
 
   });
 
@@ -70,7 +72,7 @@ export default function ActivityForm({
     };
     console.log(activitie)
 
-    onSubmit(activitie);
+    createActivity(activitie);
   };
 
 
@@ -128,11 +130,28 @@ export default function ActivityForm({
                   <FormItem>
                     <FormLabel>Quota</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="20 (Default)" {...form.register("maxVolunteers", { valueAsNumber: true })}
+                      <Input type="number" placeholder="20 (Default)" {...form.register("maxVolunteers", { valueAsNumber: true, value: 20 })}
                       />
                     </FormControl>
                     <FormDescription>
                       Quota of volunteers (optional).
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="durationHours"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Duration</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="1 hour (Default)" {...form.register("durationHours", { valueAsNumber: true, value: 1 })}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Duration in hours (optional).
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -104,7 +104,7 @@ model Activity {
     dateStart     DateTime // Date of the activity
     dateEnd       DateTime?
     durationHours Int?         @default(1)
-    maxVolunteers Int          @default(20)
+    maxVolunteers Int?         @default(20)
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
     // Relations
