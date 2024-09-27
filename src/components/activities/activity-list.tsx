@@ -1,7 +1,5 @@
 "use client";
 
-import TableError from "@/components/table-error";
-import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,8 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { api } from "@/trpc/react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { AArrowDown, AArrowUp, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
 import { useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
@@ -30,15 +27,11 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel,
-  getFacetedMinMaxValues,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
   getFilteredRowModel,
-  getGroupedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
+  type SortingState,
+  useReactTable
 } from '@tanstack/react-table';
 import { isAfter, isBefore, parseISO } from "date-fns";
 import { useMediaQuery } from "usehooks-ts";
@@ -56,6 +49,7 @@ export default function ActivityList({
 }: ActivityListProps) {
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([])
   const [dateStartFilter, setDateStartFilter] = useState<Date | null>(null);
   const [dateEndFilter, setDateEndFilter] = useState<Date | null>(null);
   const [pagination, setPagination] = useState({
@@ -129,13 +123,11 @@ export default function ActivityList({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination,
+    onSortingChange: setSorting,
     state: {
-      columnFilters: [{ id: "name", value: searchTerm }], pagination, sorting: [
-        {
-          id: 'name',
-          desc: false, // sort by name in descending order by default
-        },
-      ],
+      columnFilters: [{ id: "name", value: searchTerm }],
+      sorting,
+      pagination,
     }
   })
   const isDesktop = useMediaQuery("(min-width: 640px)", {
@@ -175,7 +167,24 @@ export default function ActivityList({
           {table.getHeaderGroups().map(headerGroup => {
             return <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                <TableHead key={header.id}
+                  onClick={header.column.getToggleSortingHandler()}
+                  title={
+                    header.column.getCanSort()
+                      ? header.column.getNextSortingOrder() === 'asc'
+                        ? 'Sort ascending'
+                        : header.column.getNextSortingOrder() === 'desc'
+                          ? 'Sort descending'
+                          : 'Clear sort'
+                      : undefined
+                  }
+                > <p className="flex items-center gap-1">
+                    {flexRender(header.column.columnDef.header, header.getContext())} {{
+                      asc: <AArrowUp className="text-accent-foreground" size={15} />,
+                      desc: <AArrowDown className="text-accent-foreground" size={15} />,
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </p>
+                </TableHead>
               ))}
             </TableRow>
           })}

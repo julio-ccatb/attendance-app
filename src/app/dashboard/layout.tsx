@@ -1,6 +1,6 @@
 "use client"
 import { Sidebar } from "@/components/sidebar/sidebar";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import { SessionProvider } from "next-auth/react";
 
 const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => (

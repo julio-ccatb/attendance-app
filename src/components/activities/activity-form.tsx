@@ -19,11 +19,10 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ToastAction } from "@radix-ui/react-toast";
 import { add, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { type Activity, ActivityCreateWithoutAttendancesInputSchema } from 'pg/generated/zod';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { type TimeValue } from "react-aria";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { type z } from "zod";
@@ -285,8 +284,8 @@ export default function ActivityForm({
                           />
 
                           <TimePicker
-                            value={startDuration}
-                            onChange={(value) => setStartDuration(value)}
+                            value={endDuration}
+                            onChange={(value) => setEndDuration(value)}
                           />
                         </PopoverContent>
                       </Popover>

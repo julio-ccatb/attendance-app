@@ -1,20 +1,20 @@
 "use client";
 
+import ActivityDetails from '@/components/activities/activity-details';
+import ActivityForm from "@/components/activities/activity-form";
+import ActivityList from "@/components/activities/activity-list";
+import TableError from "@/components/table-error";
+import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogTrigger
 } from "@/components/ui/dialog";
+import { api } from "@/trpc/react";
 import { Plus } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
 import { useState } from "react";
-import ActivityForm from "./activity-form";
-import ActivityList from "./activity-list";
-import ActivityDetails from './activity-details';
-import { api } from "@/trpc/react";
-import TableError from "@/components/table-error";
-import TableSkeleton from "@/components/table-skeleton";
 
 type View = "list" | "details";
 
@@ -72,6 +72,7 @@ export default function ActivityManagement() {
     setView("list");
     setIsModalOpen(false);
     setSelectedActivityId(null);
+    void refetch()
   };
 
 
