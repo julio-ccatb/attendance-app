@@ -1,25 +1,21 @@
-import { z } from "zod";
-
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
+  VerifyRoles,
 } from "@/server/api/trpc";
-import { ActivityCreateInputSchema } from "pg/generated/zod";
+import { ActivityCreateInputSchema, ActivityUpdateArgsSchema } from "pg/generated/zod";
 
 export const activityRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
 
   create: protectedProcedure
     .input(ActivityCreateInputSchema)
     .mutation(async ({ ctx, input }) => {
       return ctx.db.activity.create({ data: input });
+    }),
+  update: protectedProcedure.use(VerifyRoles(["ADMIN"]))
+    .input(ActivityUpdateArgsSchema)
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.activity.update({ ...input });
     }),
 
   getLatest: protectedProcedure.query(async ({ ctx }) => {

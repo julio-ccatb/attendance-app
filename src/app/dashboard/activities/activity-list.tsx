@@ -58,13 +58,13 @@ export default function ActivityList({
 
   const filteredActivities = initialActivities
     ? initialActivities.filter(
-        (activity) =>
-          (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            activity.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-          (!dateFilter ||
-            (activity.dateStart &&
-              activity.dateStart.toDateString() === dateFilter.toDateString())),
-      )
+      (activity) =>
+        (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          activity.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (!dateFilter ||
+          (activity.dateStart &&
+            activity.dateStart.toDateString() === dateFilter.toDateString())),
+    )
     : [];
 
   const pageCount = Math.ceil(filteredActivities.length / itemsPerPage);

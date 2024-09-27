@@ -126,7 +126,19 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  */
 export const VerifyRoles = (admitedRoles?: Role[]) =>
   t.middleware(({ ctx, next }) => {
-    // Verification logic
+    // If no admitted roles are specified, deny access
+    if (!admitedRoles || admitedRoles.length === 0) {
+      throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "No roles specified for verification" });
+    }
+
+    // Check if the user has any of the admitted roles
+    const userRoles = ctx.session?.user?.roles ?? [];
+    const hasPermission = userRoles.some((role) => admitedRoles.includes(role));
+
+    if (!hasPermission)
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "You do not have permission to access this resource" });
+
+
 
     return next({
       ctx,
