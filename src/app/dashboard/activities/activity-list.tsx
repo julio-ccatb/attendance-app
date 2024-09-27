@@ -45,20 +45,16 @@ import { useMediaQuery } from "usehooks-ts";
 
 type ActivityListProps = {
   activities: Activity[];
-  onEditActivity: (id: string) => void;
-  onViewDetails: (id: string) => void;
+  onEditActivity: (id: number) => void;
+  onViewDetails: (id: number) => void;
 };
 
 export default function ActivityList({
+  activities,
   onEditActivity,
   onViewDetails,
 }: ActivityListProps) {
-  const {
-    data: initialActivities,
-    status,
-    refetch,
-    error
-  } = api.activity.getLatest.useQuery();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [dateStartFilter, setDateStartFilter] = useState<Date | null>(null);
   const [dateEndFilter, setDateEndFilter] = useState<Date | null>(null);
@@ -100,10 +96,13 @@ export default function ActivityList({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onViewDetails(row.original.id.toString())}>
+              <DropdownMenuItem onClick={() => onViewDetails(row.original.id)}>
                 View details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEditActivity(row.original.id.toString())}>
+              <DropdownMenuItem onClick={() => {
+                // console.log(row.original.id)
+                onEditActivity(row.original.id)
+              }}>
                 Edit
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -113,7 +112,7 @@ export default function ActivityList({
     ],
     [onEditActivity, onViewDetails],
   );
-  const filteredData = initialActivities?.filter(item => {
+  const filteredData = activities?.filter(item => {
     const itemDate = parseISO(item.dateStart.toISOString());
 
     // Check if the item's date is within the selected date range
@@ -126,12 +125,7 @@ export default function ActivityList({
     columns,
     data: filteredData ?? [],
     getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     getFilteredRowModel: getFilteredRowModel(),
-    getGroupedRowModel: getGroupedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination,
@@ -148,14 +142,6 @@ export default function ActivityList({
     initializeWithValue: false,
   });
 
-  if (status === "pending") return <TableSkeleton />;
-  if (status === "error")
-    return (
-      <TableError
-        message={error.message}
-        onRetry={() => refetch()}
-      />
-    );
 
   return (
     <div>

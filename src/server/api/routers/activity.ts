@@ -8,6 +8,7 @@ import { ActivityCreateInputSchema, ActivityUpdateArgsSchema } from "pg/generate
 export const activityRouter = createTRPCRouter({
 
   create: protectedProcedure
+    .use(VerifyRoles(["ADMIN"]))
     .input(ActivityCreateInputSchema)
     .mutation(async ({ ctx, input }) => {
       return ctx.db.activity.create({ data: input });
@@ -25,9 +26,5 @@ export const activityRouter = createTRPCRouter({
     });
 
     return activity ?? null;
-  }),
-
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
   }),
 });

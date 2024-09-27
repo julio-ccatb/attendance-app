@@ -15,13 +15,15 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ToastAction } from "@radix-ui/react-toast";
 import { add, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { type Activity, ActivityCreateWithoutAttendancesInputSchema } from 'pg/generated/zod';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type TimeValue } from "react-aria";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { type z } from "zod";
@@ -29,7 +31,7 @@ import { type z } from "zod";
 
 type ActivityFormProps = {
   initialData?: Activity;
-  onSubmit: (data: z.infer<typeof ActivityCreateWithoutAttendancesInputSchema>) => void;
+  onSubmit: () => void;
 };
 
 
@@ -46,13 +48,46 @@ export default function ActivityForm({
   const [startDuration, setStartDuration] = useState<TimeValue>();
   const [endDuration, setEndDuration] = useState<TimeValue>();
 
-  const { mutate: createActivity, data, error } = api.activity.create.useMutation()
+  const { mutate: createActivity } = api.activity.create.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "New Activity added!",
+        description: "Your activity has been successfully added.",
+      })
+      onSubmit()
+    },
+    onError: (err) => {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong creating.",
+        description: err.message,
+      })
+    }
+  })
+  const { mutate: updateActivity } = api.activity.update.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Activity updated!",
+        description: "The activity details have been successfully updated.",
+      })
+      onSubmit()
+    },
+    onError: (err) => {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong updating.",
+        description: err.message,
+      })
+    }
+  })
 
   const form = useForm<TInput>({
-    resolver,
+
+    resolver: initialData ? undefined : resolver,
     defaultValues: { ...initialData, maxVolunteers: 20 }
 
   });
+
 
   const handleChange: SubmitHandler<TInput> = (data) => {
     const activitie: TInput = {
@@ -70,10 +105,20 @@ export default function ActivityForm({
         })
         : data.dateEnd,
     };
-    console.log(activitie)
 
-    createActivity(activitie);
+    if (initialData) {
+      updateActivity({ data, where: { id: initialData.id } })
+
+      return
+    }
+    else {
+      createActivity(activitie)
+
+      return
+    };
   };
+
+
 
 
   return (
@@ -261,10 +306,12 @@ export default function ActivityForm({
               Cancel
             </Button>
             <Button
-              disabled={!form.formState.isValid}
-              type="submit">
+              disabled={!initialData && !form.formState.isValid}
+              type="submit"
+            >
               {initialData ? "Update" : "Add"} Activity
             </Button>
+
           </CardFooter>
         </form>
       </Form>
