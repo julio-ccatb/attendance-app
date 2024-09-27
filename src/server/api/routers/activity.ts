@@ -12,18 +12,19 @@ export const activityRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return ctx.db.activity.create({ data: input });
     }),
-  update: protectedProcedure.use(VerifyRoles(["ADMIN"]))
+  update: protectedProcedure
+    .use(VerifyRoles(["ADMIN"]))
     .input(ActivityUpdateArgsSchema)
     .mutation(async ({ ctx, input }) => {
       return ctx.db.activity.update({ ...input });
     }),
 
   getLatest: protectedProcedure.query(async ({ ctx }) => {
-    const post = await ctx.db.activity.findMany({
+    const activity = await ctx.db.activity.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    return post ?? null;
+    return activity ?? null;
   }),
 
   getSecretMessage: protectedProcedure.query(() => {

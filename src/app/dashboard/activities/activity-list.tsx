@@ -22,9 +22,26 @@ import {
 import { api } from "@/trpc/react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  getFacetedMinMaxValues,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getGroupedRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { isAfter, isBefore, parseISO } from "date-fns";
+import { useMediaQuery } from "usehooks-ts";
 
 type ActivityListProps = {
   activities: Activity[];
@@ -33,7 +50,6 @@ type ActivityListProps = {
 };
 
 export default function ActivityList({
-  activities,
   onEditActivity,
   onViewDetails,
 }: ActivityListProps) {
@@ -41,37 +57,105 @@ export default function ActivityList({
     data: initialActivities,
     status,
     refetch,
+    error
   } = api.activity.getLatest.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState<Date | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [dateStartFilter, setDateStartFilter] = useState<Date | null>(null);
+  const [dateEndFilter, setDateEndFilter] = useState<Date | null>(null);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0, //initial page index
+    pageSize: 10, //default page size
+  });
+
+  const columns = useMemo<ColumnDef<Activity>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: (info) => <span className="font-medium">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+      },
+      {
+        accessorKey: "dateStart",
+        header: "Date",
+        cell: (info) => info.getValue() ? new Date(info.getValue() as string).toLocaleDateString() : "Not set",
+      },
+      {
+        accessorKey: "maxVolunteers",
+        header: "Max Volunteers",
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onViewDetails(row.original.id.toString())}>
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEditActivity(row.original.id.toString())}>
+                Edit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [onEditActivity, onViewDetails],
+  );
+  const filteredData = initialActivities?.filter(item => {
+    const itemDate = parseISO(item.dateStart.toISOString());
+
+    // Check if the item's date is within the selected date range
+    return (!dateStartFilter || !isBefore(itemDate, dateStartFilter)) &&
+      (!dateEndFilter || !isAfter(itemDate, dateEndFilter));
+  });
+
+
+  const table = useReactTable({
+    columns,
+    data: filteredData ?? [],
+    getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getGroupedRowModel: getGroupedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onPaginationChange: setPagination,
+    state: {
+      columnFilters: [{ id: "name", value: searchTerm }], pagination, sorting: [
+        {
+          id: 'name',
+          desc: false, // sort by name in descending order by default
+        },
+      ],
+    }
+  })
+  const isDesktop = useMediaQuery("(min-width: 640px)", {
+    initializeWithValue: false,
+  });
 
   if (status === "pending") return <TableSkeleton />;
   if (status === "error")
     return (
       <TableError
-        message="We could not load the data requested, please try again"
+        message={error.message}
         onRetry={() => refetch()}
       />
     );
-
-  const filteredActivities = initialActivities
-    ? initialActivities.filter(
-      (activity) =>
-        (activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          activity.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (!dateFilter ||
-          (activity.dateStart &&
-            activity.dateStart.toDateString() === dateFilter.toDateString())),
-    )
-    : [];
-
-  const pageCount = Math.ceil(filteredActivities.length / itemsPerPage);
-  const paginatedActivities = filteredActivities.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
 
   return (
     <div>
@@ -83,68 +167,50 @@ export default function ActivityList({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
-          <DatePicker
-            selected={dateFilter}
-            onChange={(date) => setDateFilter(date)}
-            placeholderText="Filter by date"
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
+          <div className={`${isDesktop ? "" : ''} flex gap-2 `}>
+
+            <DatePicker
+              selected={dateStartFilter}
+              onChange={(date) => setDateStartFilter(date)}
+              placeholderText={isDesktop ? "Filter by date start" : "Start"}
+              className={`${isDesktop ? "" : 'w-16'} rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+            />
+            <DatePicker
+              selected={dateEndFilter}
+              onChange={(date) => setDateEndFilter(date)}
+              placeholderText={isDesktop ? "Filter by date end" : "End"}
+              className={`${isDesktop ? "" : 'w-16'} rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+            />
+          </div>
         </div>
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Max Volunteers</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
+          {table.getHeaderGroups().map(headerGroup => {
+            return <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map(header => (
+                <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+              ))}
+            </TableRow>
+          })}
         </TableHeader>
         <TableBody>
-          {paginatedActivities.map((activity) => (
-            <TableRow key={activity.id}>
-              <TableCell className="font-medium">{activity.name}</TableCell>
-              <TableCell>{activity.description}</TableCell>
-              <TableCell>
-                {activity.dateStart
-                  ? activity.dateStart.toLocaleDateString()
-                  : "Not set"}
-              </TableCell>
-              <TableCell>{activity.maxVolunteers}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => onViewDetails(activity.id.toString())}
-                    >
-                      View details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onEditActivity(activity.id.toString())}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+          {table.getRowModel().rows.map(row => {
+
+            return <TableRow key={row.id}>
+              {row.getVisibleCells().map(cell => {
+                return (<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>)
+              })}
             </TableRow>
-          ))}
+          })}
         </TableBody>
       </Table>
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
         >
           <ChevronLeft className="h-4 w-4" />
           Previous
@@ -152,10 +218,8 @@ export default function ActivityList({
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, pageCount))
-          }
-          disabled={currentPage === pageCount}
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
         >
           Next
           <ChevronRight className="h-4 w-4" />
