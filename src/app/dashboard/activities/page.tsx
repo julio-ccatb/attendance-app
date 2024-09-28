@@ -1,23 +1,18 @@
 "use client";
 
-import ActivityDetails from '@/components/activities/activity-details';
+import ActivityDetails from "@/components/activities/activity-details";
 import ActivityForm from "@/components/activities/activity-form";
 import ActivityList from "@/components/activities/activity-list";
 import TableError from "@/components/table-error";
 import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { api } from "@/trpc/react";
 import { Plus } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type View = "list" | "details";
-
 
 export default function ActivityManagement() {
   const [view, setView] = useState<View>("list");
@@ -32,18 +27,16 @@ export default function ActivityManagement() {
     data: activities,
     status,
     refetch,
-    error
+    error,
   } = api.activity.getLatest.useQuery();
 
+  useEffect(() => {
+    console.log("useEffect en activity-page.tsx");
+  }, []);
 
   if (status === "pending") return <TableSkeleton />;
   if (status === "error")
-    return (
-      <TableError
-        message={error.message}
-        onRetry={() => refetch()}
-      />
-    );
+    return <TableError message={error.message} onRetry={() => refetch()} />;
 
   const handleAddActivity = () => {
     setEditingActivity(null);
@@ -72,9 +65,8 @@ export default function ActivityManagement() {
     setView("list");
     setIsModalOpen(false);
     setSelectedActivityId(null);
-    void refetch()
+    void refetch();
   };
-
 
   return (
     <div className="container mx-auto py-10">
@@ -97,12 +89,11 @@ export default function ActivityManagement() {
       {view === "list" && (
         <ActivityList
           activities={activities}
-          // onAddActivity={handleAddActivity}
           onEditActivity={handleEditActivity}
           onViewDetails={handleViewDetails}
         />
       )}
-      {view === 'details' && selectedActivityId && (
+      {view === "details" && selectedActivityId && (
         <ActivityDetails
           activityId={selectedActivityId}
           onBack={handleBack}

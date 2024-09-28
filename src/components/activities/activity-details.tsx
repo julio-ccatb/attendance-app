@@ -1,55 +1,63 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Edit, Loader2 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-type Activity = {
-  id: number
-  name: string
-  description: string
-  date: Date
-  maxVolunteers: number
-}
-
-type Volunteer = {
-  id: string
-  name: string
-  email: string
-}
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ArrowLeft, Edit, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { api } from "@/trpc/react";
 
 type ActivityDetailsProps = {
-  activityId: number
-  onBack: () => void
-  onEdit: (id: number) => void
-}
+  activityId: number;
+  onBack: () => void;
+  onEdit: (id: number) => void;
+};
 
-export default function ActivityDetails({ activityId, onBack, onEdit }: ActivityDetailsProps) {
-  const [activity, setActivity] = useState<Activity | null>(null)
-  const [volunteers, setVolunteers] = useState<Volunteer[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default function ActivityDetails({
+  activityId,
+  onBack,
+  onEdit,
+}: ActivityDetailsProps) {
+  const {
+    isLoading,
+    error,
+    data: activity,
+  } = api.activity.getById.useQuery({ id: activityId });
 
-
+  useEffect(() => {
+    console.log("useEffect en activity-details.tsx");
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <Alert variant="destructive">
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription>{error.message}</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!activity) {
@@ -58,7 +66,7 @@ export default function ActivityDetails({ activityId, onBack, onEdit }: Activity
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>Activity not found.</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   return (
@@ -75,7 +83,7 @@ export default function ActivityDetails({ activityId, onBack, onEdit }: Activity
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold">Date</h3>
-              <p>{activity.date.toLocaleDateString()}</p>
+              <p>{activity.dateStart.toLocaleDateString()}</p>
             </div>
             <div>
               <h3 className="font-semibold">Maximum Volunteers</h3>
@@ -93,7 +101,9 @@ export default function ActivityDetails({ activityId, onBack, onEdit }: Activity
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Registered Volunteers</CardTitle>
-          <CardDescription>List of volunteers signed up for this activity</CardDescription>
+          <CardDescription>
+            List of volunteers signed up for this activity
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -104,19 +114,21 @@ export default function ActivityDetails({ activityId, onBack, onEdit }: Activity
               </TableRow>
             </TableHeader>
             <TableBody>
-              {volunteers.map((volunteer) => (
+              {/* {volunteers.map((volunteer) => (
                 <TableRow key={volunteer.id}>
                   <TableCell>{volunteer.name}</TableCell>
                   <TableCell>{volunteer.email}</TableCell>
                 </TableRow>
-              ))}
+              ))} */}
             </TableBody>
           </Table>
         </CardContent>
         <CardFooter>
-          <p>Total Volunteers: {volunteers.length} / {activity.maxVolunteers}</p>
+          <p>
+            {/* Total Volunteers: {volunteers.length} / {activity.maxVolunteers} */}
+          </p>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

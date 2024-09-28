@@ -11,9 +11,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TimePicker } from "@/components/ui/date-time-picker/time-picker";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -21,18 +33,19 @@ import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { add, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { type Activity, ActivityCreateWithoutAttendancesInputSchema } from 'pg/generated/zod';
+import {
+  type Activity,
+  ActivityCreateWithoutAttendancesInputSchema,
+} from "pg/generated/zod";
 import { useState } from "react";
 import { type TimeValue } from "react-aria";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { type z } from "zod";
 
-
 type ActivityFormProps = {
   initialData?: Activity;
   onSubmit: () => void;
 };
-
 
 type TInput = z.infer<typeof ActivityCreateWithoutAttendancesInputSchema>;
 
@@ -42,83 +55,76 @@ export default function ActivityForm({
   initialData,
   onSubmit,
 }: ActivityFormProps) {
-
-
   const [startDuration, setStartDuration] = useState<TimeValue>();
   const [endDuration, setEndDuration] = useState<TimeValue>();
 
-  const { mutate: createActivity } = api.activity.create.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "New Activity added!",
-        description: "Your activity has been successfully added.",
-      })
-      onSubmit()
-    },
-    onError: (err) => {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong creating.",
-        description: err.message,
-      })
-    }
-  })
-  const { mutate: updateActivity } = api.activity.update.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Activity updated!",
-        description: "The activity details have been successfully updated.",
-      })
-      onSubmit()
-    },
-    onError: (err) => {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong updating.",
-        description: err.message,
-      })
-    }
-  })
+  const { mutate: createActivity, isPending: isCreatignActivity } =
+    api.activity.create.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "New Activity added!",
+          description: "Your activity has been successfully added.",
+        });
+        return onSubmit();
+      },
+      onError: (err) => {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong creating.",
+          description: err.message,
+        });
+      },
+    });
+  const { mutate: updateActivity, isPending: isUpdatingActivity } =
+    api.activity.update.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Activity updated!",
+          description: "The activity details have been successfully updated.",
+        });
+        return onSubmit();
+      },
+      onError: (err) => {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong updating.",
+          description: err.message,
+        });
+      },
+    });
 
   const form = useForm<TInput>({
-
     resolver: initialData ? undefined : resolver,
-    defaultValues: { ...initialData, maxVolunteers: 20 }
-
+    defaultValues: { ...initialData, maxVolunteers: 20 },
   });
-
 
   const handleChange: SubmitHandler<TInput> = (data) => {
     const activitie: TInput = {
       ...data,
       dateStart: startDuration
         ? add(data.dateStart, {
-          hours: startDuration.hour,
-          minutes: startDuration.minute,
-        })
+            hours: startDuration.hour,
+            minutes: startDuration.minute,
+          })
         : data.dateStart,
       dateEnd: endDuration
         ? add(data.dateStart, {
-          hours: endDuration.hour,
-          minutes: endDuration.minute,
-        })
+            hours: endDuration.hour,
+            minutes: endDuration.minute,
+          })
         : data.dateEnd,
     };
 
     if (initialData) {
-      updateActivity({ data, where: { id: initialData.id } })
+      updateActivity({ data, where: { id: initialData.id } });
 
-      return
+      return;
+    } else {
+      createActivity(activitie);
+
+      return;
     }
-    else {
-      createActivity(activitie)
-
-      return
-    };
   };
-
-
-
 
   return (
     <Card className="mx-auto w-full max-w-2xl border-none">
@@ -134,8 +140,7 @@ export default function ActivityForm({
       </CardHeader>
       <Form {...form}>
         <form className="" onSubmit={form.handleSubmit(handleChange)}>
-
-          <CardContent className="px-2 space-y-4">
+          <CardContent className="space-y-4 px-2">
             <div className="space-y-2">
               <FormField
                 control={form.control}
@@ -146,7 +151,9 @@ export default function ActivityForm({
                     <FormControl>
                       <Input placeholder="Name" {...field} />
                     </FormControl>
-                    <FormDescription>This is your public display name.</FormDescription>
+                    <FormDescription>
+                      This is your public display name.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -158,7 +165,10 @@ export default function ActivityForm({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Brief or resume of the activitie." {...field} />
+                      <Textarea
+                        placeholder="Brief or resume of the activitie."
+                        {...field}
+                      />
                     </FormControl>
                     <FormDescription>
                       Description of the activity.
@@ -174,7 +184,13 @@ export default function ActivityForm({
                   <FormItem>
                     <FormLabel>Quota</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="20 (Default)" {...form.register("maxVolunteers", { valueAsNumber: true, value: 20 })}
+                      <Input
+                        type="number"
+                        placeholder="20 (Default)"
+                        {...form.register("maxVolunteers", {
+                          valueAsNumber: true,
+                          value: 20,
+                        })}
                       />
                     </FormControl>
                     <FormDescription>
@@ -191,7 +207,13 @@ export default function ActivityForm({
                   <FormItem>
                     <FormLabel>Duration</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="1 hour (Default)" {...form.register("durationHours", { valueAsNumber: true, value: 1 })}
+                      <Input
+                        type="number"
+                        placeholder="1 hour (Default)"
+                        {...form.register("durationHours", {
+                          valueAsNumber: true,
+                          value: 1,
+                        })}
                       />
                     </FormControl>
                     <FormDescription>
@@ -202,7 +224,6 @@ export default function ActivityForm({
                 )}
               />
               <div className="w-[350px]">
-
                 <FormField
                   control={form.control}
                   name="dateStart"
@@ -215,7 +236,7 @@ export default function ActivityForm({
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full  pl-3 text-left font-normal",
+                                "w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground",
                               )}
                             >
@@ -249,7 +270,8 @@ export default function ActivityForm({
                       <FormMessage />
                     </FormItem>
                   )}
-                />            <FormField
+                />{" "}
+                <FormField
                   control={form.control}
                   name="dateEnd"
                   render={({ field }) => (
@@ -261,7 +283,7 @@ export default function ActivityForm({
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full  pl-3 text-left font-normal",
+                                "w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground",
                               )}
                             >
@@ -296,21 +318,23 @@ export default function ActivityForm({
                     </FormItem>
                   )}
                 />
-
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between px-2">
-            <Button type="button" variant="outline">
+            <Button onClick={onSubmit} type="button" variant="outline">
               Cancel
             </Button>
             <Button
-              disabled={!initialData && !form.formState.isValid}
+              disabled={
+                (!initialData && !form.formState.isValid) ||
+                isCreatignActivity ||
+                isUpdatingActivity
+              }
               type="submit"
             >
               {initialData ? "Update" : "Add"} Activity
             </Button>
-
           </CardFooter>
         </form>
       </Form>
