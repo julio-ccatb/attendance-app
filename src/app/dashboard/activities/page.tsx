@@ -66,8 +66,8 @@ export default function ActivityManagement() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Activity Management</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="mb-5 text-2xl font-bold">Activity Management</h1>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleAddActivity}>

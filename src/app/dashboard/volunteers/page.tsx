@@ -1,177 +1,110 @@
 "use client";
 
-import { useState } from "react";
+import TableError from "@/components/table-error";
+import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  Plus,
-} from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import VolunteerForm from "@/components/volunteers/volunteer-form";
+import VolunteerList from "@/components/volunteers/volunteer-list";
+import { api } from "@/trpc/react";
+import { Plus } from "lucide-react";
+import { type Volunteer } from "pg/generated/zod";
+import { useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 
-type Volunteer = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-};
+type View = "list" | "details";
 
-const initialVolunteers: Volunteer[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    joinDate: "2023-01-15",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "098-765-4321",
-    joinDate: "2023-02-20",
-  },
-  {
-    id: "3",
-    name: "Alice Johnson",
-    email: "alice@example.com",
-    phone: "555-123-4567",
-    joinDate: "2023-03-10",
-  },
-  // Add more mock data as needed
-];
-
-export default function VolunteerList() {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>(initialVolunteers);
-  const [searchTerm, setSearchTerm] = useState("");
+export default function VolunteerManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredVolunteers = volunteers.filter(
-    (volunteer) =>
-      volunteer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      volunteer.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  const [view, setView] = useState<View>("list");
+  const [selectedVolunteerId, setSelectedVolunteerId] = useState<number | null>(
+    null,
   );
 
-  const pageCount = Math.ceil(filteredVolunteers.length / itemsPerPage);
-  const paginatedVolunteers = filteredVolunteers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(
+    null,
   );
 
-  const handleDelete = (id: string) => {
-    setVolunteers(volunteers.filter((v) => v.id !== id));
-  };
+  const {
+    data: volunteers,
+    status,
+    refetch,
+    error,
+  } = api.volunteer.getLatest.useQuery();
 
   const isDesktop = useMediaQuery("(min-width: 840px)", {
     initializeWithValue: false,
   });
 
+  if (status === "pending") return <TableSkeleton />;
+  if (status === "error")
+    return <TableError message={error.message} onRetry={() => refetch()} />;
+
+  const handleAddVolunteer = () => {
+    setEditingVolunteer(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditVolunteer = (id: number) => {
+    const volunteerToEdit = volunteers.find((volunteer) => volunteer.id === id);
+    if (volunteerToEdit) {
+      setEditingVolunteer(volunteerToEdit);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleViewDetails = (id: number) => {
+    setView("details");
+    setSelectedVolunteerId(id);
+  };
+
+  const handleBack = () => {
+    setView("list");
+    setSelectedVolunteerId(null);
+  };
+
+  const onSubmit = () => {
+    setView("list");
+    setIsModalOpen(false);
+    setSelectedVolunteerId(null);
+    void refetch();
+  };
+
   return (
     <div className="container mx-auto py-10">
-      <h1 className="mb-5 text-2xl font-bold">Volunteer Management</h1>
       <div className="mb-4 flex items-center justify-between">
-        <Input
-          placeholder="Search volunteers..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+        <h1 className="mb-5 text-2xl font-bold">Volunteer Management</h1>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleAddVolunteer}>
+              <Plus className="mr-2 h-4 w-4" /> Add Volunteer
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <VolunteerForm
+              onSubmit={onSubmit}
+              initialData={editingVolunteer ?? undefined}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+      {view === "list" && (
+        <VolunteerList
+          volunteers={volunteers}
+          onEditVolunteer={handleEditVolunteer}
+          onViewDetails={handleViewDetails}
         />
-        <Button>
-          <Plus className={`${isDesktop ? "mr-2" : ""} h-4 w-4`} />
-          {!isDesktop || "Add Volunteer"}
-        </Button>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Join Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedVolunteers.map((volunteer) => (
-            <TableRow key={volunteer.id}>
-              <TableCell className="font-medium">{volunteer.name}</TableCell>
-              <TableCell>{volunteer.email}</TableCell>
-              <TableCell>{volunteer.phone}</TableCell>
-              <TableCell>{volunteer.joinDate}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => console.log("View details", volunteer.id)}
-                    >
-                      View details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => console.log("Edit", volunteer.id)}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDelete(volunteer.id)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, pageCount))
-          }
-          disabled={currentPage === pageCount}
-        >
-          Next
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      )}
+      {/* {view === "details" && selectedVolunteerId && (
+        // <ActivityDetails
+        //   activityId={selectedActivityId}
+        //   onBack={handleBack}
+        //   onEdit={handleEditActivity}
+        // />
+      )} */}
     </div>
   );
 }
