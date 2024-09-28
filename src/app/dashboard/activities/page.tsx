@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { api } from "@/trpc/react";
 import { Plus } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type View = "list" | "details";
 
@@ -29,10 +29,6 @@ export default function ActivityManagement() {
     refetch,
     error,
   } = api.activity.getLatest.useQuery();
-
-  useEffect(() => {
-    console.log("useEffect en activity-page.tsx");
-  }, []);
 
   if (status === "pending") return <TableSkeleton />;
   if (status === "error")

@@ -6,7 +6,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function Component() {
+export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center px-4 py-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
       <div className="w-full space-y-6 text-center">

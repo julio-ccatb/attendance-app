@@ -25,7 +25,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { type Activity } from "pg/generated/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -57,14 +57,10 @@ export default function ActivityList({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [dateStartFilter, setDateStartFilter] = useState<Date | null>(null);
   const [dateEndFilter, setDateEndFilter] = useState<Date | null>(null);
-  // const [pagination, setPagination] = useState({
-  //   pageIndex: 0, //initial page index
-  //   pageSize: 10, //default page size
-  // });
-
-  useEffect(() => {
-    console.log("useEffect en activity-list.tsx");
-  }, []);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0, //initial page index
+    pageSize: 10, //default page size
+  });
 
   const columns = useMemo<ColumnDef<Activity>[]>(
     () => [
@@ -141,12 +137,12 @@ export default function ActivityList({
     getSortedRowModel: getSortedRowModel(),
     autoResetPageIndex: false, //  <-- stops the rerendering
     autoResetAll: false, //  <-- stops the rerendering
-    // onPaginationChange: setPagination,
+    onPaginationChange: setPagination,
     onSortingChange: setSorting,
     state: {
       columnFilters: [{ id: "name", value: searchTerm }],
       sorting,
-      // pagination,
+      pagination,
     },
   });
   const isDesktop = useMediaQuery("(min-width: 640px)", {

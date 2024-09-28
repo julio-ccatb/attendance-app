@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,14 +13,12 @@ import {
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Loader2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/trpc/react";
+import { ArrowLeft, Edit, Loader2 } from "lucide-react";
 
 type ActivityDetailsProps = {
   activityId: number;
@@ -38,10 +36,6 @@ export default function ActivityDetails({
     error,
     data: activity,
   } = api.activity.getById.useQuery({ id: activityId });
-
-  useEffect(() => {
-    console.log("useEffect en activity-details.tsx");
-  }, []);
 
   if (isLoading) {
     return (
