@@ -4,6 +4,7 @@ import TableError from "@/components/table-error";
 import TableSkeleton from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import VolunteerDetails from "@/components/volunteers/volunteer-details";
 import VolunteerForm from "@/components/volunteers/volunteer-form";
 import VolunteerList from "@/components/volunteers/volunteer-list";
 import { api } from "@/trpc/react";
@@ -98,13 +99,13 @@ export default function VolunteerManagement() {
           onViewDetails={handleViewDetails}
         />
       )}
-      {/* {view === "details" && selectedVolunteerId && (
-        // <ActivityDetails
-        //   activityId={selectedActivityId}
-        //   onBack={handleBack}
-        //   onEdit={handleEditActivity}
-        // />
-      )} */}
+      {view === "details" && selectedVolunteerId && (
+        <VolunteerDetails
+          volunteerId={selectedVolunteerId}
+          onBack={handleBack}
+          onEdit={handleEditVolunteer}
+        />
+      )}
     </div>
   );
 }

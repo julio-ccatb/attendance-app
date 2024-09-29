@@ -38,7 +38,7 @@ export const volunteerRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return await ctx.db.volunteer.findUnique({
         where: { id: input.id },
-        include: { attendances: { include: { user: true } } },
+        include: { attendances: { include: { user: true, activity: true } } },
       });
     }),
   getAll: protectedProcedure
