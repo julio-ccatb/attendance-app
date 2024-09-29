@@ -11,14 +11,10 @@ import { api } from "@/trpc/react";
 import { Plus } from "lucide-react";
 import { type Volunteer } from "pg/generated/zod";
 import { useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
 
 type View = "list" | "details";
 
 export default function VolunteerManagement() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
   const [view, setView] = useState<View>("list");
   const [selectedVolunteerId, setSelectedVolunteerId] = useState<number | null>(
     null,
@@ -35,10 +31,6 @@ export default function VolunteerManagement() {
     refetch,
     error,
   } = api.volunteer.getLatest.useQuery();
-
-  const isDesktop = useMediaQuery("(min-width: 840px)", {
-    initializeWithValue: false,
-  });
 
   if (status === "pending") return <TableSkeleton />;
   if (status === "error")

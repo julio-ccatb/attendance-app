@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,26 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit } from "lucide-react";
-import { Volunteer } from "pg/generated/zod";
 import { api } from "@/trpc/react";
-
-// type Volunteer = {
-//   id: string;
-//   name: string;
-//   email: string;
-//   phone: string;
-//   address: string;
-//   skills: string;
-//   joinDate: string;
-// };
-
-type AttendanceRecord = {
-  id: string;
-  activityName: string;
-  date: string;
-  hours: number;
-};
+import { ArrowLeft, Edit } from "lucide-react";
 
 type VolunteerDetailsProps = {
   volunteerId: number;
@@ -50,10 +31,6 @@ export default function VolunteerDetails({
   onBack,
   onEdit,
 }: VolunteerDetailsProps) {
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    AttendanceRecord[]
-  >([]);
-
   const { data: volunteer } = api.volunteer.getById.useQuery({
     id: volunteerId,
   });
